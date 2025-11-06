@@ -17,10 +17,11 @@ PHONE = "+91-7304060673"
 EMAIL = "nagaphani.leads@gmail.com"
 QR_IMAGE_PATH = "Nagaphani_Buddepu_QR_Stylish.png"
 
-# Google Form connection (replace entry.123456 with your field’s ID)
+# Google Form connection
 GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSecSyxpZzYo_1q5yQCfKNtMkdO2uCRygB9FUfdJmgSLljqIyg/formResponse"
-GOOGLE_FORM_FIELD = "entry.311064709"     # 🔹 Replace with actual entry ID from your form. This is for Company & Role Details.
-GOOGLE_FORM_FIELD_2 = "entry.1028102109"  # 🔹 Replace with actual entry ID from your form. This is for Contact Email or Phone.
+GOOGLE_FORM_FIELD = "entry.311064709"     # Company & Role Details
+GOOGLE_FORM_FIELD_2 = "entry.1028102109"  # Contact Email or Phone
+GOOGLE_FORM_NAME_FIELD = "entry.834988391"  # Optional "Name" field
 
 # -------------------- LOAD RESUME TEXT --------------------
 try:
@@ -51,11 +52,19 @@ if recruiter_intro:
     # Log recruiter info to Google Form
     try:
         form_data = {
-            GOOGLE_FORM_FIELD: recruiter_intro,
-            GOOGLE_FORM_FIELD_2: recruiter_contact or recruiter_email  # log contact/email if given
+            GOOGLE_FORM_NAME_FIELD: "Nagaphani AI Career Assistant",
+            GOOGLE_FORM_FIELD: recruiter_intro.strip(),
+            GOOGLE_FORM_FIELD_2: (recruiter_contact or recruiter_email or "").strip()
         }
-        requests.post(GOOGLE_FORM_URL, data=form_data, timeout=5)
-        st.toast("Recruiter info saved securely ✅")
+
+        if form_data[GOOGLE_FORM_FIELD] or form_data[GOOGLE_FORM_FIELD_2]:
+            response = requests.post(GOOGLE_FORM_URL, data=form_data, timeout=5)
+            if response.status_code == 200:
+                st.toast("Recruiter info saved securely ✅")
+            else:
+                st.warning(f"⚠️ Form submission returned status {response.status_code}")
+        else:
+            st.info("ℹ️ No recruiter info to log yet.")
     except Exception as e:
         st.warning(f"⚠️ Couldn't submit data to Google Form: {e}")
 else:
