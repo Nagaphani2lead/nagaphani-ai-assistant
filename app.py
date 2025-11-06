@@ -17,16 +17,6 @@ PHONE = "+91-7304060673"
 EMAIL = "nagaphani.leads@gmail.com"
 QR_IMAGE_PATH = "Nagaphani_Buddepu_QR_Stylish.png"
 
-# Google Form connection
-GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSecSyxpZzYo_1q5yQCfKNtMkdO2uCRygB9FUfdJmgSLljqIyg/formResponse"
-GOOGLE_FORM_FIELD = "entry.311064709"     # Company & Role Details
-GOOGLE_FORM_FIELD_2 = "entry.1028102109"  # Contact Email or Phone
-GOOGLE_FORM_NAME_FIELD = "entry.834988391"  # Optional Name field
-
-# -------------------- SESSION STATE --------------------
-if "submitted" not in st.session_state:
-    st.session_state["submitted"] = False
-
 # -------------------- LOAD RESUME TEXT --------------------
 try:
     response = requests.get(RESUME_DOWNLOAD_URL)
@@ -45,37 +35,14 @@ st.caption("Ask about my experience, certifications, AI projects, or request my 
 
 # -------------------- RECRUITER INTRO --------------------
 st.markdown("👋 **Hi, I’m Nagaphani’s AI Career Assistant.**")
-st.write("Before we chat, could you please tell me a bit about yourself and the position you’re hiring for?")
+st.write("Before we chat, could you please tell me a bit about the position or company you’re hiring for?")
 
-recruiter_name = st.text_input("Your Name (optional)")
-recruiter_email = st.text_input("Recruiter Email (optional)")
-recruiter_contact = st.text_input("Recruiter Contact Number (optional)")
 recruiter_intro = st.text_area("Can I know more about the position and company, please?", "")
 
-if (recruiter_intro or recruiter_name or recruiter_contact or recruiter_email) and not st.session_state["submitted"]:
+if recruiter_intro:
     st.success("Thank you for sharing that! Let’s continue our conversation.")
-    try:
-        form_data = {
-            GOOGLE_FORM_NAME_FIELD: recruiter_name.strip() if recruiter_name else "Not provided",
-            GOOGLE_FORM_FIELD: recruiter_intro.strip() if recruiter_intro else "Not provided",
-            GOOGLE_FORM_FIELD_2: (recruiter_contact or recruiter_email or "").strip(),
-        }
-
-        if form_data[GOOGLE_FORM_FIELD] or form_data[GOOGLE_FORM_FIELD_2]:
-            response = requests.post(GOOGLE_FORM_URL, data=form_data, timeout=5)
-            if response.status_code == 200:
-                st.toast("Recruiter info saved securely ✅")
-                st.session_state["submitted"] = True
-            else:
-                st.warning(f"⚠️ Form submission returned status {response.status_code}")
-        else:
-            st.info("ℹ️ No recruiter info to log yet.")
-    except Exception as e:
-        st.warning(f"⚠️ Couldn't submit data to Google Form: {e}")
-elif st.session_state["submitted"]:
-    st.info("✅ Recruiter details already logged for this session.")
 else:
-    st.info("👆 Please share at least one detail (name, company, or contact) before we chat.")
+    st.info("👆 Please tell me a bit about the position or company before we chat.")
 
 # -------------------- MAIN CHAT --------------------
 question = st.text_input("Type your question here...")
@@ -164,7 +131,6 @@ if question.strip():
 
 # -------------------- FOOTER --------------------
 if recruiter_intro:
-    st.caption(f"✅ Recruiter info logged for: {recruiter_intro[:60]}...")
+    st.caption(f"✅ Recruiter info noted: {recruiter_intro[:60]}...")
 st.markdown("---")
-st.caption("🔒 Information you share here is logged securely in Google Form for professional follow-up.")
 st.caption("🤖 Designed by Nagaphani Buddepu | AI Delivery • Product Leadership • Transformation Excellence")
