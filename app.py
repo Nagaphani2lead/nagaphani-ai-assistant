@@ -80,6 +80,10 @@ if question.strip():
         
         He continues to mentor early-stage founders and student innovators in Agile adoption,
         AI modernization, and ethical technology leadership.
+
+        💰 **Compensation Information:**  
+        Current package – approximately ₹55 lakhs per annum.  
+        Expected range – ₹80 lakhs – ₹1 crore, flexible depending on global role scope and responsibilities.
         
         For additional professional insights, certifications, and published highlights,
         please visit his LinkedIn profile:  
