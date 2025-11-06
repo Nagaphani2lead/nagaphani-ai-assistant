@@ -3,6 +3,7 @@ from openai import OpenAI
 from PyPDF2 import PdfReader
 import requests
 from io import BytesIO
+import os
 
 # -------------------- CONFIG --------------------
 client = OpenAI(api_key="OPENAI_API_KEY")   # 👈 Replace with your OpenAI API key
