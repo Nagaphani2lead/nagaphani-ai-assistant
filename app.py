@@ -29,11 +29,31 @@ except Exception as e:
 
 # -------------------- UI --------------------
 st.set_page_config(page_title="Chat with Nagaphani", page_icon="🤖")
-st.title("💬 Chat with Nagaphani's AI Career Assistant")
+st.markdown("## 💬 Chat with Nagaphani's AI Career Assistant")
+st.divider()
 st.caption("Ask about my experience, certifications, AI projects, or request my résumé/contact details.")
 
-question = st.text_input("Type your question here...")
+# -------------------- WELCOME & RECRUITER INFO --------------------
+st.markdown("""
+👋 **Welcome!**  
+I'm Nagaphani's AI Career Assistant.  
+To personalize our chat, you may share a few details below (optional).
+""")
 
+recruiter_name = st.text_input("Your Name (optional)")
+company_name = st.text_input("Company Name (optional)")
+role_name = st.text_input("Role / Hiring for (optional)")
+recruiter_email = st.text_input("Your Email (optional)")
+recruiter_contact = st.text_input("Your Contact Number (optional)")
+
+st.caption("Now you can ask about my experience, leadership roles, certifications, AI projects, or résumé/contact details below.")
+
+# Enable chat only after some info or if they skip
+if recruiter_name or company_name or role_name or recruiter_email or recruiter_contact:
+    question = st.text_input("Type your question here...")
+else:
+    st.info("👆 You can fill in any of the details above to start chatting.")
+    question = ""
 # -------------------- RESPONSE LOGIC --------------------
 if question.strip():
     q = question.lower()
@@ -70,7 +90,7 @@ if question.strip():
         CMMI Level 3 development processes. He has mentored multiple organizations in building quality systems,
         process automation frameworks, and compliance-ready engineering documentation.
         
-        She is open to opportunities across any global location.  
+        He is open to opportunities across any global location.  
         For positions outside India, he would require a valid work permit.
         
         When Fortune 500 companies approach him, he is best suited for senior AI Leadership roles such as
@@ -80,7 +100,7 @@ if question.strip():
         
         He continues to mentor early-stage founders and student innovators in Agile adoption,
         AI modernization, and ethical technology leadership.
-
+        
         💰 **Compensation Information:**  
         Current package – approximately ₹55 lakhs per annum.  
         Expected range – ₹80 lakhs – ₹1 crore, flexible depending on global role scope and responsibilities.
@@ -89,8 +109,17 @@ if question.strip():
         please visit his LinkedIn profile:  
         https://www.linkedin.com/in/phani2lead/
         """
+        
         prompt = f"""
         You are an AI Career Assistant representing Nagaphani Buddepu.
+        
+        This conversation is with {recruiter_name or "a visitor"} from {company_name or "an organization"}.
+        If the recruiter has mentioned a role like '{role_name}', keep that in mind while responding.
+        
+        Their contact details (if provided):
+        Email: {recruiter_email or "not shared"}
+        Contact: {recruiter_contact or "not shared"}
+        
         Use both the résumé and the professional context below to answer questions clearly, confidently,
         and in a recruiter-friendly tone. Be concise but highlight leadership, transformation, and quality credentials.
         
@@ -112,8 +141,11 @@ if question.strip():
         )
         
         st.write(response.choices[0].message.content)
+        if recruiter_name:
+            st.success(f"😊 Thank you, {recruiter_name}! Let me know if you’d like me to share anything else.")
 else:
     st.info("👆 Type a question above to chat with your AI profile assistant.")
 
 st.markdown("---")
+st.caption("🔒 Information you share here is not stored or transmitted externally — it’s only used to personalize this conversation.")
 st.caption("🤖 Designed by Nagaphani Buddepu | AI Delivery • Product Leadership • Transformation Excellence")
