@@ -6,7 +6,8 @@ from io import BytesIO
 import os
 
 # -------------------- SETUP --------------------
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
 
 # Resume link (Google Drive direct link)
 RESUME_VIEW_URL = "https://drive.google.com/file/d/1A9fGkLL-oP9LbPNWLsWjevBzHb5Qx3Ki/view?usp=sharing"
@@ -23,8 +24,11 @@ try:
     pdf = BytesIO(response.content)
     reader = PdfReader(pdf)
     resume_text = "".join([page.extract_text() or "" for page in reader.pages])
+    resume_text = resume_text[:15000]  # keep only first 15K characters
 except Exception as e:
     resume_text = "Resume could not be loaded."
+    resume_text = resume_text[:15000]  # keep only first 15K characters
+
     st.error(f"Error reading resume: {e}")
 
 # -------------------- PAGE HEADER --------------------
@@ -121,14 +125,17 @@ if question.strip():
 
         User question: {question}
         """
-
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-        )
-
-        st.write(response.choices[0].message.content)
-
+        
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": prompt}],
+            )
+            st.write(response.choices[0].message.content)
+            
+        except Exception as e:
+            st.error(f"⚠️ OpenAI API error: {e}")
+    
 # -------------------- FOOTER --------------------
 if recruiter_intro:
     st.caption(f"✅ Recruiter info noted: {recruiter_intro[:60]}...")
