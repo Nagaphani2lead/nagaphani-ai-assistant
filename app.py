@@ -5,7 +5,7 @@ import requests
 from io import BytesIO
 import os
 
-# Read key from Streamlit Secrets (or local environment)
+# -------------------- SETUP --------------------
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 # Resume link (Google Drive direct link)
@@ -17,6 +17,11 @@ PHONE = "+91-7304060673"
 EMAIL = "nagaphani.leads@gmail.com"
 QR_IMAGE_PATH = "Nagaphani_Buddepu_QR_Stylish.png"
 
+# Google Form connection (replace entry.123456 with your field’s ID)
+GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSecSyxpZzYo_1q5yQCfKNtMkdO2uCRygB9FUfdJmgSLljqIyg/formResponse"
+GOOGLE_FORM_FIELD = "entry.311064709"     # 🔹 Replace with actual entry ID from your form. This is for Company & Role Details.
+GOOGLE_FORM_FIELD_2 = "entry.1028102109"  # 🔹 Replace with actual entry ID from your form. This is for Contact Email or Phone.
+
 # -------------------- LOAD RESUME TEXT --------------------
 try:
     response = requests.get(RESUME_DOWNLOAD_URL)
@@ -27,34 +32,38 @@ except Exception as e:
     resume_text = "Resume could not be loaded."
     st.error(f"Error reading resume: {e}")
 
-# -------------------- UI --------------------
+# -------------------- PAGE HEADER --------------------
 st.set_page_config(page_title="Chat with Nagaphani", page_icon="🤖")
 st.markdown("## 💬 Chat with Nagaphani's AI Career Assistant")
 st.divider()
 st.caption("Ask about my experience, certifications, AI projects, or request my résumé/contact details.")
 
-# -------------------- WELCOME & RECRUITER INFO --------------------
-st.markdown("""
-👋 **Welcome!**  
-I'm Nagaphani's AI Career Assistant.  
-To personalize our chat, you may share a few details below (optional).
-""")
+# -------------------- RECRUITER INTRO --------------------
+st.markdown("👋 **Hi, I’m Nagaphani’s AI Career Assistant.**")
+st.write("Before we chat, could you please tell me a bit about the position or company you’re hiring for?")
 
-recruiter_name = st.text_input("Your Name (optional)")
-company_name = st.text_input("Company Name (optional)")
-role_name = st.text_input("Role / Hiring for (optional)")
-recruiter_email = st.text_input("Your Email (optional)")
-recruiter_contact = st.text_input("Your Contact Number (optional)")
+recruiter_email = st.text_input("Recruiter Email (optional)")
+recruiter_contact = st.text_input("Recruiter Contact Number (optional)")
+recruiter_intro = st.text_area("Can I know more about the position and company, please?", "")
 
-st.caption("Now you can ask about my experience, leadership roles, certifications, AI projects, or résumé/contact details below.")
-
-# Enable chat only after some info or if they skip
-if recruiter_name or company_name or role_name or recruiter_email or recruiter_contact:
-    question = st.text_input("Type your question here...")
+if recruiter_intro:
+    st.success("Thank you for sharing that! Let’s continue our conversation.")
+    # Log recruiter info to Google Form
+    try:
+        form_data = {
+            GOOGLE_FORM_FIELD: recruiter_intro,
+            GOOGLE_FORM_FIELD_2: recruiter_contact or recruiter_email  # log contact/email if given
+        }
+        requests.post(GOOGLE_FORM_URL, data=form_data, timeout=5)
+        st.toast("Recruiter info saved securely ✅")
+    except Exception as e:
+        st.warning(f"⚠️ Couldn't submit data to Google Form: {e}")
 else:
-    st.info("👆 You can fill in any of the details above to start chatting.")
-    question = ""
-# -------------------- RESPONSE LOGIC --------------------
+    st.info("👆 Please tell me a bit about the position or company before we chat.")
+
+# -------------------- MAIN CHAT --------------------
+question = st.text_input("Type your question here...")
+
 if question.strip():
     q = question.lower()
     keywords = ["contact", "linkedin", "phone", "email", "resume", "pdf", "qr", "connect", "download"]
@@ -78,74 +87,68 @@ if question.strip():
             mime="application/pdf",
         )
     else:
-        # -------------------- SMART PROFESSIONAL CONTEXT --------------------
+        # -------------------- PROFESSIONAL CONTEXT --------------------
         extra_context = """
         Nagaphani Buddepu is currently available for immediate joining.
-        
+
         He brings over a decade of experience in AI delivery, digital transformation, and product leadership.
         He has served as an Agile Transformation Coach, mentoring enterprise teams and startups to scale efficiently
         through modern practices like Agile, DevOps, MLOps, and data-driven innovation.
-        
+
         Nagaphani is POSH certified, ISO 9001 / 13485 / 27001 compliant documentation expert, and experienced with
         CMMI Level 3 development processes. He has mentored multiple organizations in building quality systems,
         process automation frameworks, and compliance-ready engineering documentation.
-        
+
         He is open to opportunities across any global location.  
         For positions outside India, he would require a valid work permit.
-        
+
         When Fortune 500 companies approach him, he is best suited for senior AI Leadership roles such as
         **Head of AI Delivery, AI Transformation Leader, or Enterprise AI Program Director**.  
         When engaging with startups, his vision is to grow as **Chief Digital & AI Officer or Head of Technology**, 
         driving innovation, culture, and digital product maturity from zero to scale.
-        
+
         He continues to mentor early-stage founders and student innovators in Agile adoption,
         AI modernization, and ethical technology leadership.
-        
+
         💰 **Compensation Information:**  
         Current package – approximately ₹55 lakhs per annum.  
         Expected range – ₹80 lakhs – ₹1 crore, flexible depending on global role scope and responsibilities.
-        
+
         For additional professional insights, certifications, and published highlights,
         please visit his LinkedIn profile:  
         https://www.linkedin.com/in/phani2lead/
         """
-        
+
         prompt = f"""
         You are an AI Career Assistant representing Nagaphani Buddepu.
-        
-        This conversation is with {recruiter_name or "a visitor"} from {company_name or "an organization"}.
-        If the recruiter has mentioned a role like '{role_name}', keep that in mind while responding.
-        
-        Their contact details (if provided):
-        Email: {recruiter_email or "not shared"}
-        Contact: {recruiter_contact or "not shared"}
-        
+        This conversation is with a recruiter who shared this about the role:
+        "{recruiter_intro}"
+
         Use both the résumé and the professional context below to answer questions clearly, confidently,
         and in a recruiter-friendly tone. Be concise but highlight leadership, transformation, and quality credentials.
-        
+
         If a question isn’t covered in the résumé or context, respond gracefully with:
         "That topic isn't mentioned in my résumé, but I'd be happy to discuss it further."
-        
+
         Professional Context:
         {extra_context}
-        
+
         Résumé:
         {resume_text}
-        
+
         User question: {question}
         """
-        
+
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
         )
-        
-        st.write(response.choices[0].message.content)
-        if recruiter_name:
-            st.success(f"😊 Thank you, {recruiter_name}! Let me know if you’d like me to share anything else.")
-else:
-    st.info("👆 Type a question above to chat with your AI profile assistant.")
 
+        st.write(response.choices[0].message.content)
+
+# -------------------- FOOTER --------------------
+if recruiter_intro:
+    st.caption(f"✅ Recruiter info logged for: {recruiter_intro[:60]}...")
 st.markdown("---")
-st.caption("🔒 Information you share here is not stored or transmitted externally — it’s only used to personalize this conversation.")
+st.caption("🔒 Information you share here is logged securely in Google Form for professional follow-up.")
 st.caption("🤖 Designed by Nagaphani Buddepu | AI Delivery • Product Leadership • Transformation Excellence")
