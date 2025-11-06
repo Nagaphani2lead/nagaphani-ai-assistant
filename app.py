@@ -5,7 +5,7 @@ import requests
 from io import BytesIO
 
 # -------------------- CONFIG --------------------
-client = OpenAI(api_key="YOUR_OPENAI_API_KEY")   # 👈 Replace with your OpenAI API key
+client = OpenAI(api_key="OPENAI_API_KEY")   # 👈 Replace with your OpenAI API key
 
 # Resume link (Google Drive direct link)
 RESUME_VIEW_URL = "https://drive.google.com/file/d/1A9fGkLL-oP9LbPNWLsWjevBzHb5Qx3Ki/view?usp=sharing"
