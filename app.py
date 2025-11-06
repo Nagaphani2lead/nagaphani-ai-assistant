@@ -3,16 +3,10 @@ from openai import OpenAI
 from PyPDF2 import PdfReader
 import requests
 from io import BytesIO
-
 import os
-from openai import OpenAI
 
 # Read key from Streamlit Secrets (or local environment)
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-
-
-# -------------------- CONFIG --------------------
-client = OpenAI(api_key="OPENAI_API_KEY")   # 👈 Replace with your OpenAI API key
 
 # Resume link (Google Drive direct link)
 RESUME_VIEW_URL = "https://drive.google.com/file/d/1A9fGkLL-oP9LbPNWLsWjevBzHb5Qx3Ki/view?usp=sharing"
