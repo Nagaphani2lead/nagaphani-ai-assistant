@@ -37,13 +37,14 @@ question = st.text_input("Type your question here...")
 # -------------------- RESPONSE LOGIC --------------------
 if question.strip():
     q = question.lower()
-    keywords = ["contact", "phone", "email", "resume", "pdf", "qr", "connect", "download"]
+    keywords = ["contact", "linkedin", "phone", "email", "resume", "pdf", "qr", "connect", "download"]
 
     if any(k in q for k in keywords):
         st.subheader("📞 Contact Information")
         st.markdown(f"""
         - **Phone:** {PHONE}  
         - **Email:** [{EMAIL}](mailto:{EMAIL})  
+        - **LinkedIn:** [https://www.linkedin.com/in/phani2lead/](https://www.linkedin.com/in/phani2lead/)  
         - **Résumé:** [View PDF]({RESUME_VIEW_URL})
         """)
         try:
@@ -57,9 +58,43 @@ if question.strip():
             mime="application/pdf",
         )
     else:
+        # -------------------- SMART PROFESSIONAL CONTEXT --------------------
+        extra_context = """
+        Nagaphani Buddepu is currently available for immediate joining.
+        
+        He brings over a decade of experience in AI delivery, digital transformation, and product leadership.
+        He has served as an Agile Transformation Coach, mentoring enterprise teams and startups to scale efficiently
+        through modern practices like Agile, DevOps, MLOps, and data-driven innovation.
+        
+        Nagaphani is POSH certified, ISO 9001 / 13485 / 27001 compliant documentation expert, and experienced with
+        CMMI Level 3 development processes. He has mentored multiple organizations in building quality systems,
+        process automation frameworks, and compliance-ready engineering documentation.
+        
+        She is open to opportunities across any global location.  
+        For positions outside India, he would require a valid work permit.
+        
+        When Fortune 500 companies approach him, he is best suited for senior AI Leadership roles such as
+        **Head of AI Delivery, AI Transformation Leader, or Enterprise AI Program Director**.  
+        When engaging with startups, his vision is to grow as **Chief Digital & AI Officer or Head of Technology**, 
+        driving innovation, culture, and digital product maturity from zero to scale.
+        
+        He continues to mentor early-stage founders and student innovators in Agile adoption,
+        AI modernization, and ethical technology leadership.
+        
+        For additional professional insights, certifications, and published highlights,
+        please visit his LinkedIn profile:  
+        https://www.linkedin.com/in/phani2lead/
+        """
         prompt = f"""
-        You are an AI Career Assistant that answers questions only using information from Nagaphani Buddepu's résumé below.
-        If something is not mentioned, say "That detail isn't specified in my résumé."
+        You are an AI Career Assistant representing Nagaphani Buddepu.
+        Use both the résumé and the professional context below to answer questions clearly, confidently,
+        and in a recruiter-friendly tone. Be concise but highlight leadership, transformation, and quality credentials.
+        
+        If a question isn’t covered in the résumé or context, respond gracefully with:
+        "That topic isn't mentioned in my résumé, but I'd be happy to discuss it further."
+        
+        Professional Context:
+        {extra_context}
         
         Résumé:
         {resume_text}
