@@ -21,7 +21,11 @@ QR_IMAGE_PATH = "Nagaphani_Buddepu_QR_Stylish.png"
 GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSecSyxpZzYo_1q5yQCfKNtMkdO2uCRygB9FUfdJmgSLljqIyg/formResponse"
 GOOGLE_FORM_FIELD = "entry.311064709"     # Company & Role Details
 GOOGLE_FORM_FIELD_2 = "entry.1028102109"  # Contact Email or Phone
-GOOGLE_FORM_NAME_FIELD = "entry.834988391"  # Optional "Name" field
+GOOGLE_FORM_NAME_FIELD = "entry.834988391"  # Optional Name field
+
+# -------------------- SESSION STATE --------------------
+if "submitted" not in st.session_state:
+    st.session_state["submitted"] = False
 
 # -------------------- LOAD RESUME TEXT --------------------
 try:
@@ -47,9 +51,9 @@ recruiter_email = st.text_input("Recruiter Email (optional)")
 recruiter_contact = st.text_input("Recruiter Contact Number (optional)")
 recruiter_intro = st.text_area("Can I know more about the position and company, please?", "")
 
-if recruiter_intro:
+if recruiter_intro and not st.session_state["submitted"]:
     st.success("Thank you for sharing that! Let’s continue our conversation.")
-    # Log recruiter info to Google Form
+    # Log recruiter info to Google Form once per session
     try:
         form_data = {
             GOOGLE_FORM_NAME_FIELD: "Nagaphani AI Career Assistant",
@@ -61,14 +65,15 @@ if recruiter_intro:
             response = requests.post(GOOGLE_FORM_URL, data=form_data, timeout=5)
             if response.status_code == 200:
                 st.toast("Recruiter info saved securely ✅")
+                st.session_state["submitted"] = True
             else:
                 st.warning(f"⚠️ Form submission returned status {response.status_code}")
         else:
             st.info("ℹ️ No recruiter info to log yet.")
     except Exception as e:
         st.warning(f"⚠️ Couldn't submit data to Google Form: {e}")
-else:
-    st.info("👆 Please tell me a bit about the position or company before we chat.")
+elif st.session_state["submitted"]:
+    st.info("✅ Recruiter details already logged for this session.")
 
 # -------------------- MAIN CHAT --------------------
 question = st.text_input("Type your question here...")
