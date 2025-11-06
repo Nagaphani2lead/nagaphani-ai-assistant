@@ -5,7 +5,7 @@ import requests
 from io import BytesIO
 
 # -------------------- CONFIG --------------------
-client = OpenAI(api_key="OPENAI_API_KEY")   # 👈 Replace with your OpenAI API key
+client = OpenAI(api_key="YOUR_OPENAI_API_KEY")   # 👈 Replace with your OpenAI API key
 
 # Resume link (Google Drive direct link)
 RESUME_VIEW_URL = "https://drive.google.com/file/d/1A9fGkLL-oP9LbPNWLsWjevBzHb5Qx3Ki/view?usp=sharing"
@@ -57,22 +57,21 @@ if question.strip():
         )
     else:
         prompt = f"""
-        You are an AI assistant for Nagaphani Buddepu.
-        Use the following resume content to answer clearly and professionally.
-        Resume:
+        You are an AI Career Assistant that answers questions only using information from Nagaphani Buddepu's résumé below.
+        If something is not mentioned, say "That detail isn't specified in my résumé."
+        
+        Résumé:
         {resume_text}
-
-        Question: {question}
+        
+        User question: {question}
         """
-        try:
-            reply = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.4,
-            )
-            st.success(reply.choices[0].message.content)
-        except Exception as e:
-            st.error(f"AI error: {e}")
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+        )
+        
+        st.write(response.choices[0].message.content)
 else:
     st.info("👆 Type a question above to chat with your AI profile assistant.")
 
