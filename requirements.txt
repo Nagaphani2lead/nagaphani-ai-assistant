@@ -3,5 +3,4 @@ streamlit
 openai
 PyPDF2
 requests
-# For Voicebot
-pip install openai streamlit sounddevice numpy scipy
+
