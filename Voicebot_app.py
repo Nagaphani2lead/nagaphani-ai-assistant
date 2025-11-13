@@ -3,9 +3,6 @@ from openai import OpenAI
 from PyPDF2 import PdfReader
 import requests
 from io import BytesIO
-import sounddevice as sd
-import numpy as np
-import wavio
 
 # -------------------- SETUP --------------------
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -18,104 +15,102 @@ QR_IMAGE_PATH = "Nagaphani_Buddepu_QR_Stylish.png"
 
 
 # -------------------- LOAD RESUME TEXT --------------------
-try:
-    response = requests.get(RESUME_DOWNLOAD_URL)
-    pdf = BytesIO(response.content)
-    reader = PdfReader(pdf)
-    resume_text = "".join([page.extract_text() or "" for page in reader.pages])
-    resume_text = resume_text[:15000]
-except:
-    resume_text = "Resume could not be loaded."
+@st.cache_data
+def load_resume_text():
+    try:
+        response = requests.get(RESUME_DOWNLOAD_URL)
+        pdf = BytesIO(response.content)
+        reader = PdfReader(pdf)
+        resume_text = "".join([page.extract_text() or "" for page in reader.pages])
+        return resume_text[:15000]
+    except:
+        return "Resume could not be loaded."
+
+resume_text = load_resume_text()
 
 
 # -------------------- STREAMLIT UI --------------------
 st.set_page_config(page_title="Voice Chat with Nagaphani", page_icon="🎤")
 st.title("🎤 Nagaphani’s AI Career Voice Assistant")
-st.caption("Ask about my experience, projects, certifications, or résumé.")
+st.caption("Ask about experience, AI projects, certifications, or résumé.")
 
 st.divider()
 
 # -------------------- RECRUITER INTRO --------------------
 st.markdown("👋 **Hi, I’m Nagaphani’s AI Career Assistant (Voice Mode).**")
-st.write("Before we talk, could you please tell me a bit about the position or company you're hiring for?")
+st.write("Before we speak, please share the company/role you are recruiting for.")
 
 recruiter_intro = st.text_area("Company / Position Details:", "")
-if recruiter_intro.strip():
-    st.success("Perfect. You can now speak your questions.")
+
+if not recruiter_intro.strip():
+    st.info("Please provide recruiter/company details to enable voice input.")
 else:
-    st.info("Please fill the recruiter details before asking questions.")
+    st.success("Great! You can now record your voice.")
 
 
-# -------------------- RECORD AUDIO --------------------
-def record_audio(duration=5, fs=44100):
-    st.info("🎧 Listening... speak now.")
-    audio = sd.rec(int(duration * fs), samplerate=fs, channels=1)
-    sd.wait()
-    return audio, fs
+# -------------------- BROWSER AUDIO RECORDER --------------------
+st.markdown("### 🎙️ Tap below to record your question:")
 
+audio_bytes = st.audio_input("Record your question")
 
-# -------------------- BUTTON --------------------
-if st.button("🎙️ Tap to Speak"):
-    if not recruiter_intro.strip():
-        st.warning("Please enter recruiter/company details first.")
-        st.stop()
+if audio_bytes and recruiter_intro.strip():
 
-    # Record
-    audio, fs = record_audio()
-    wavio.write("input.wav", audio, fs, sampwidth=2)
-    st.success("Audio captured.")
+    st.info("🎧 Processing your audio…")
 
-    # Speech → Text
-    with open("input.wav", "rb") as f:
-        transcript = client.audio.transcriptions.create(
-            model="gpt-4o-mini-transcribe",
-            file=f
-        )
+    # -------------------- STEP 1: Audio → Text --------------------
+    transcript = client.audio.transcriptions.create(
+        model="gpt-4o-mini-transcribe",
+        file=audio_bytes
+    )
     user_text = transcript.text
+
     st.write("🗣️ **You said:**", user_text)
 
-    # -------------------- CONTACT INFO HANDLING --------------------
-    keywords = ["contact", "phone", "email", "linkedin", "resume", "qr", "download", "pdf"]
-    if any(k in user_text.lower() for k in keywords):
-        st.subheader("📞 Contact Details")
+    # -------------------- CONTACT KEYWORDS --------------------
+    keyword_hits = any(k in user_text.lower() for k in [
+        "contact", "phone", "email", "linkedin", "resume", "pdf", "qr", "download"
+    ])
+
+    if keyword_hits:
+        reply_text = (
+            f"My contact details are: Phone {PHONE}, Email {EMAIL}, "
+            "and my résumé and LinkedIn profile are available on request."
+        )
+        st.subheader("📞 Contact Information")
         st.markdown(f"""
-        - **Phone:** {PHONE}  
-        - **Email:** [{EMAIL}](mailto:{EMAIL})  
-        - **LinkedIn:** https://www.linkedin.com/in/phani2lead/  
-        - **Résumé:** [View PDF]({RESUME_VIEW_URL})
+        **Phone:** {PHONE}  
+        **Email:** {EMAIL}  
+        **LinkedIn:** https://www.linkedin.com/in/phani2lead/  
+        **Résumé:** [View PDF]({RESUME_VIEW_URL})
         """)
+
         try:
             st.image(QR_IMAGE_PATH, width=180)
         except:
             pass
 
-        # Audio response
-        reply_text = f"My contact details are: Phone {PHONE}, Email {EMAIL}, and LinkedIn phani2lead."
     else:
         # -------------------- PROFESSIONAL CONTEXT --------------------
         extra_context = """
         Nagaphani Buddepu is currently available for immediate joining.
-        He has deep experience in AI Delivery, Digital Transformation,
-        Agile/DevOps/MLOps coaching, ISO compliance, and Enterprise leadership.
+        He has expertise in AI Delivery, Digital Transformation,
+        Product Leadership, Agile/DevOps/MLOps, ISO compliance,
+        and enterprise-scale AI modernization.
 
-        He mentors early-stage founders, students, and enterprises.
         Ideal roles: Head of AI Delivery, AI Transformation Leader,
-        Enterprise AI Program Director, Chief Digital & AI Officer.
+        Chief Digital & AI Officer, Enterprise AI Program Director.
 
-        Current CTC ~55 LPA, expected 80 LPA – 1 Cr depending on scope.
+        Current CTC ~55 LPA; Expected 80 LPA – 1 Cr for global positions.
         """
 
-        # -------------------- SAME SYSTEM PROMPT (from chatbot) --------------------
+        # -------------------- SYSTEM PROMPT (same as chatbot) --------------------
         full_prompt = f"""
         You are an AI Career Assistant representing Nagaphani Buddepu.
-        This conversation is with a recruiter who shared this about the role:
+        The recruiter said:
         "{recruiter_intro}"
 
-        Use both the résumé and the professional context below to answer clearly,
-        confidently and in a recruiter-friendly tone. Highlight leadership,
-        transformation, and AI delivery strengths.
-
-        If a question isn’t covered in the résumé/context, reply with:
+        Use both résumé and professional context to answer clearly and confidently.
+        If something is not in the résumé, say:
         "That topic isn't mentioned in my résumé, but I'd be happy to discuss it further."
 
         Professional Context:
@@ -130,19 +125,19 @@ if st.button("🎙️ Tap to Speak"):
 
         completion = client.chat.completions.create(
             model="gpt-4o",
-            messages=[{"role": "user", "content": full_prompt}],
+            messages=[{"role": "user", "content": full_prompt}]
         )
-        reply_text = completion.choices[0].message.content
-        st.write("🤖 **AI Assistant:**", reply_text)
 
-    # Text → Speech
+        reply_text = completion.choices[0].message.content
+        st.write("🤖 **AI Response:**", reply_text)
+
+    # -------------------- STEP 3: Text → Speech --------------------
     speech = client.audio.speech.create(
         model="gpt-4o-mini-tts",
         voice="alloy",
         input=reply_text
     )
 
-    with open("reply.wav", "wb") as f:
-        f.write(speech.read())
+    st.success("Generating audio response…")
 
-    st.audio("reply.wav")
+    st.audio(speech.read(), format="audio/mp3")
