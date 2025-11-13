@@ -99,35 +99,64 @@ if audio_bytes and recruiter_intro.strip():
 
         Ideal roles: Head of AI Delivery, AI Transformation Leader,
         Chief Digital & AI Officer, Enterprise AI Program Director.
-
+    
         Current CTC ~55 LPA; Expected 80 LPA – 1 Cr for global positions.
         """
-
-        # -------------------- SYSTEM PROMPT (same as chatbot) --------------------
-        full_prompt = f"""
-        You are an AI Career Assistant representing Nagaphani Buddepu.
+    
+        # -------------------- CLEAN & NORMALIZE TRANSCRIPT --------------------
+        cleaned_text = user_text.lower()
+        cleaned_text = cleaned_text.replace("fanny", "phani")
+        cleaned_text = cleaned_text.replace("funny", "phani")
+        cleaned_text = cleaned_text.replace("pani", "phani")
+        cleaned_text = cleaned_text.replace("fani", "phani")
+    
+        # -------------------- INTENT REWRITE --------------------
+        intent_rewrite_prompt = f"""
+        Rewrite this recruiter question clearly, fixing name mistakes
+        (Fanny -> Nagaphani or Phani), and rewriting it in clean English:
+        {cleaned_text}
+        """
+    
+        rewritten = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": intent_rewrite_prompt}]
+        )
+    
+        rewritten_question = rewritten.choices[0].message.content
+        st.write("🔍 **Interpreted Question:**", rewritten_question)
+    
+        # -------------------- ENHANCED SYSTEM PROMPT --------------------
+        career_prompt = f"""
+        You are an AI Career Assistant representing **Nagaphani Buddepu**.
+    
         The recruiter said:
         "{recruiter_intro}"
-
-        Use both résumé and professional context to answer clearly and confidently.
-        If something is not in the résumé, say:
-        "That topic isn't mentioned in my résumé, but I'd be happy to discuss it further."
-
+    
+        Use both résumé and professional context to answer clearly
+        and confidently. Highlight leadership strengths, AI delivery,
+        scaling teams, product vision, and CEO-readiness.
+    
+        Assume:
+        - Any mispronunciation still means Nagaphani.
+        - Never say "not in my résumé" unless totally unrelated.
+        - If the topic is leadership, growth, CEO role, scaling from 20 to 100,
+          ALWAYS give a strong executive-level answer.
+    
         Professional Context:
         {extra_context}
-
+    
         Résumé:
         {resume_text}
 
-        Recruiter question:
-        {user_text}
+        Recruiter question (corrected):
+        {rewritten_question}
         """
-
+    
         completion = client.chat.completions.create(
             model="gpt-4o",
-            messages=[{"role": "user", "content": full_prompt}]
+            messages=[{"role": "user", "content": career_prompt}]
         )
-
+    
         reply_text = completion.choices[0].message.content
         st.write("🤖 **AI Response:**", reply_text)
 
