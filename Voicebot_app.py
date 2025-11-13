@@ -127,7 +127,9 @@ if audio_bytes and recruiter_intro.strip():
     
         # -------------------- ENHANCED SYSTEM PROMPT --------------------
         career_prompt = f"""
-        You are an AI Career Assistant representing **Nagaphani Buddepu**.
+        You are an AI Career Assistant representing **Mrs. Nagaphani Buddepu**, a female AI/ML leader and digital transformation professional.
+        Use female pronouns (she/her) at all times. Never use he/him.
+
     
         The recruiter said:
         "{recruiter_intro}"
