@@ -1,7 +1,7 @@
 streamlit
 openai
-sounddevice
-numpy
-scipy
 PyPDF2
 requests
+wavio
+sounddevice
+numpy
